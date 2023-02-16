@@ -9,12 +9,14 @@ from getopt import getopt, GetoptError
 from glob import glob
 
 def usage():
+    """Prints the usage of the program"""
     print("Usage:\npython app.py [options]\n")
     print("Options:")
     print("\t-h --help: Show this help message and exit")
     print("\t-c --config: specify a config file, not advised")
 
 def main():
+    """Main function of the program"""
     try:
         opts, args = getopt(sys.argv[1:], "hc:", ["help", "config="])
     except GetoptError as err:

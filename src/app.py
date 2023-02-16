@@ -1,12 +1,14 @@
 #! /usr/bin/python
-
-from spleeter.separator import Separator
-from spotdl import Spotdl
+"""
+This app is a music downloader that uses the spotdl library to download music from spotify
+and the spleeter library to separate the music into its different parts
+"""
 import sys
 import subprocess
-import utils
 from getopt import getopt, GetoptError
 from glob import glob
+from spotdl import Spotdl
+import utils
 
 def usage():
     """Prints the usage of the program"""
@@ -18,16 +20,16 @@ def usage():
 def main():
     """Main function of the program"""
     try:
-        opts, args = getopt(sys.argv[1:], "hc:", ["help", "config="])
+        opts, _ = getopt(sys.argv[1:], "hc:", ["help", "config="])
     except GetoptError as err:
         print(err)
         usage()
         sys.exit(2)
-    for o, a in opts:
-        if o in ("-h", "--help"):
+    for opt, _ in opts:
+        if opt in ("-h", "--help"):
             usage()
             sys.exit()
-        elif o in ("-c", "--config"):
+        elif opt in ("-c", "--config"):
             print("alt Config file not currently supported")
             sys.exit(2)
         else:
@@ -42,22 +44,20 @@ def main():
     print("Name the folder you want to save the music to")
     fold_end = input()
 
+
     session_folder, seperated_folder = utils.create_unique_folder(config["data_home"], fold_end)
     spotdl = Spotdl(config["client_id"], config["client_secret"], output=session_folder)
     songs = spotdl.search([url])
-    results = spotdl.download_songs(songs)
+    spotdl.download_songs(songs)
 
     songs_downloaded = glob(session_folder + "/*.mp3")
     cmd = ["spleeter", "separate", "-o", seperated_folder, "-p", "spleeter:5stems"]
     for song in songs_downloaded:
         cmd.append(song)
         try:
-            proc = subprocess.run(cmd, check=True)
-        except subprocess.CalledProcessError as e:
-            print("Error: {}".format(e))
+            subprocess.run(cmd, check=True)
+        except subprocess.CalledProcessError as err:
+            print("Error: %s", str(err))
         cmd.pop()
-
-        
-
 if __name__ == "__main__":
     main()

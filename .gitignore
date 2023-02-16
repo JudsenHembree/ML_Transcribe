@@ -1,0 +1,13 @@
+## don't push mp3 or wav files to github
+*.mp3
+*.wav
+
+## as a matter of fact ignore all of the data folder
+data/**
+
+## ignore python cache files
+**/__pycache__/
+
+## ignore pretained models
+**/pretrained_models/**
+

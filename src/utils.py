@@ -2,7 +2,6 @@
 Utility functions for the project
 """
 from pathlib import Path as path
-from subprocess import run, PIPE, CalledProcessError
 from glob import glob
 import sys
 import os
@@ -62,15 +61,10 @@ def attempt_archive(data_home):
     for folder in dat:
         if os.path.isdir(folder):
             if not folder.endswith("archive"):
-                try:
-                    arcpath = os.path.join(data_home, "archive")
-                    print("Archiving %s to %s", folder, path)
-                    proc = run(["mv", folder, arcpath], \
-                            stdout=PIPE, stderr=PIPE, check=True)
-                    if proc.returncode != 0:
-                        print("Error: %s", str(proc.stderr))
-                except CalledProcessError as err:
-                    print("Error: %s", str(err))
+                arcpath = os.path.join(data_home, "archive")
+                print("Archiving %s to %s", folder, path)
+                renamed = os.path.join(arcpath, os.path.basename(folder))
+                os.rename(folder, renamed)
 
 def get_config(file=path('/ML_Transcribe/config/config.json')):
     """Reads the config file and returns a dictionary"""
@@ -152,12 +146,7 @@ def graph_wav(file):
 
 def cull_data_home(data_home):
     """Deletes the data home"""
-    try:
-        proc = run(["rm", "-rf", data_home], stdout=PIPE, stderr=PIPE, check=True)
-        if proc.returncode != 0:
-            print("Error: %s", str(proc.stderr))
-    except CalledProcessError as err:
-        print("Error: %s", str(err))
+    os.rmdir(data_home)
     make_data_home(data_home)
 
 def make_data_home(data_home):

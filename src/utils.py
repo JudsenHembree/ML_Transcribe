@@ -12,7 +12,7 @@ from glob import glob
 
 def reconfigure():
     """Reconfigures the config file"""
-    config = get_config()
+    config, file = get_config()
     pwd = os.getcwd()
     print("Current data home is %s", config["data_home"])
     config["data_home"] = pwd + "/data"
@@ -21,7 +21,7 @@ def reconfigure():
     config["MODEL_DIRECTORY"] = pwd + "/models"
     print("New model directory is %s", config["MODEL_DIRECTORY"])
 
-    with open('/ML_Transcribe/config/config.json', 'w') as conf:
+    with open(file, 'w') as conf:
         json.dump(config, conf)
 
 def check_data_home(data_home):
@@ -76,7 +76,7 @@ def get_config(file='/ML_Transcribe/config/config.json'):
             sys.exit(2)
     with open(file, encoding="utf-8") as conf:
         config = json.load(conf)
-    return config
+    return config, file
 
 def create_unique_folder(data_home, fold_end):
     """Creates a unique folder for the session fold end is usually user input"""

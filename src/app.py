@@ -24,10 +24,13 @@ def main():
     global GRAPH
     global NEW
     global CULL
+    global RECONF
 
     GRAPH = False
     NEW = False
     CULL = False
+    RECONF = False
+
 
     """Parse command line arguments"""
     try:
@@ -38,8 +41,8 @@ def main():
         sys.exit(2)
     for opt, _ in opts:
         if opt in ("-r", "--reconfig"):
-            print("Reconfiguring config file")
-            utils.reconfigure()
+            print("Reconfiguring.")
+            RECONF = True
         if opt in ("-h", "--help"):
             usage()
             sys.exit()
@@ -56,11 +59,15 @@ def main():
             print("Delete data in data_home folder")
             CULL = True
         else:
-            print("Unknown option")
+            print("Unknown option" + opt) 
             usage()
             sys.exit(2)
 
-    config = utils.get_config()
+    if RECONF:
+        utils.reconfigure()
+
+    config, file = utils.get_config()
+
     if CULL:
         utils.cull_data_home(config["data_home"])
         utils.make_data_home(config["data_home"])

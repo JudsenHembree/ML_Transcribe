@@ -90,7 +90,6 @@ def get_config(file=path('/ML_Transcribe/config/config.json')):
     """Reads the config file and returns a dictionary"""
     print("Reading config file")
     if not os.path.exists(file):
-        print("Error: %s not found", file)
         print("Warning: %s not found", file)
         print("You were probably using a symlink")
         print("Attempting to find config file")

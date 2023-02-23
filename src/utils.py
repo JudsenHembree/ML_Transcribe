@@ -135,8 +135,10 @@ def graph_wav(file):
         return
     frames = wav.readframes(-1)
     sound_info = np.fromstring(frames, 'int16')
+    frame_rate = wav.getframerate()
     wav.close()
     try:
+        # Plot the sound wave
         fig = plt.figure(figsize=(10, 6), edgecolor='k')
         plt.title(file)
         plt.plot(sound_info)

@@ -116,6 +116,8 @@ def graph_all_wav_for_each_folder(folder):
             for inner_file in os.listdir(os.path.join(folder, file)):
                 if os.path.isdir(os.path.join(folder, file, inner_file)):
                     graph_all_wav(os.path.join(folder, file, inner_file))
+                    # midi kinda trash
+                    # wav_to_midi(os.path.join(folder, file, inner_file))
 
 def graph_all_wav(folder):
     """Graphs all .wav files in a folder"""
@@ -135,7 +137,6 @@ def graph_wav(file):
         return
     frames = wav.readframes(-1)
     sound_info = np.fromstring(frames, 'int16')
-    frame_rate = wav.getframerate()
     wav.close()
     try:
         fig = plt.figure(figsize=(10, 6), edgecolor='k')
@@ -182,5 +183,8 @@ def wav_to_midi(wav_file):
         print("Error: %s", str(err))
         return
     print("Writing midi file")
-    midi_file = os.path.join(os.path.dirname(wav_file), os.path.basename(wav_file) + "_conv_midi.mid")
+    midi_file = os.path.join(os.path.dirname(wav_file), os.path.basename(wav_file) + ".mid")
     midi_data.write(midi_file)
+    print("Writing midi file as html to %s", midi_file + ".html")
+    plotter = Plotter()
+    plt = plotter.save(midi_data, midi_file + ".html")

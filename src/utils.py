@@ -3,6 +3,7 @@ Utility functions for the project
 """
 from pathlib import Path as path
 from glob import glob
+from shutil import rmtree
 import sys
 import os
 import json
@@ -146,7 +147,7 @@ def graph_wav(file):
 
 def cull_data_home(data_home):
     """Deletes the data home"""
-    os.rmdir(data_home)
+    rmtree(data_home)
     make_data_home(data_home)
 
 def make_data_home(data_home):

@@ -33,20 +33,6 @@ def reconfigure():
         print(config)
         json.dump(config, conf)
 
-def reconfigure():
-    """Reconfigures the config file"""
-    config, file = get_config()
-    pwd = os.getcwd()
-    print("Current data home is %s", config["data_home"])
-    config["data_home"] = pwd + "/data"
-    print("New data home is %s", config["data_home"])
-    print("Current model directory is %s", config["MODEL_DIRECTORY"])
-    config["MODEL_DIRECTORY"] = pwd + "/models"
-    print("New model directory is %s", config["MODEL_DIRECTORY"])
-
-    with open(file, 'w') as conf:
-        json.dump(config, conf)
-
 def check_data_home(data_home):
     """Checks if the data home has two folders"""
     if len(os.listdir(data_home)) > 2:
@@ -67,11 +53,6 @@ def get_active_folder(data_home):
 
 def attempt_archive(data_home):
     """Attempts to archive prior run into the archive folder"""
-    if not os.path.exists(data_home):
-        print("Warning: %s not found", data_home)
-        print("Creating data home")
-        os.makedirs(data_home)
-        return
     glob_path = path(data_home + "/*")
     dat = glob(str(glob_path))
     print(dat)
@@ -90,6 +71,7 @@ def get_config(file=path('/ML_Transcribe/config/config.json')):
     """Reads the config file and returns a dictionary"""
     print("Reading config file")
     if not os.path.exists(file):
+        print("Error: %s not found", file)
         print("Warning: %s not found", file)
         print("You were probably using a symlink")
         print("Attempting to find config file")

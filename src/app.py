@@ -25,11 +25,13 @@ def main():
     global NEW
     global CULL
     global RECONF
+    global ML_Home
 
     GRAPH = False
     NEW = False
     CULL = False
     RECONF = False
+    ML_Home = "/ML_Transcribe"
 
     """Parse command line arguments"""
     try:
@@ -63,7 +65,7 @@ def main():
             sys.exit(2)
 
     if RECONF:
-        utils.reconfigure()
+        ML_Home = utils.reconfigure()
 
     config, file = utils.get_config()
 

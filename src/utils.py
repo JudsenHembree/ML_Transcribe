@@ -131,7 +131,7 @@ def graph_wav(file):
     frame_rate = wav.getframerate()
     wav.close()
     try:
-        fig = plt.figure()
+        fig = plt.figure(autoscale_on=True, figsize=(8, 4))
         plt.title(file)
         plt.plot(sound_info)
         plt.xlabel("Time")

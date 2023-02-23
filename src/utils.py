@@ -33,6 +33,20 @@ def reconfigure():
         print(config)
         json.dump(config, conf)
 
+def reconfigure():
+    """Reconfigures the config file"""
+    config = get_config()
+    pwd = os.getcwd()
+    print("Current data home is %s", config["data_home"])
+    config["data_home"] = pwd + "/data"
+    print("New data home is %s", config["data_home"])
+    print("Current model directory is %s", config["MODEL_DIRECTORY"])
+    config["MODEL_DIRECTORY"] = pwd + "/models"
+    print("New model directory is %s", config["MODEL_DIRECTORY"])
+
+    with open('/ML_Transcribe/config/config.json', 'w') as conf:
+        json.dump(config, conf)
+
 def check_data_home(data_home):
     """Checks if the data home has two folders"""
     if len(os.listdir(data_home)) > 2:

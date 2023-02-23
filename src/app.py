@@ -19,8 +19,19 @@ def usage():
 
 def main():
     """Main function of the program"""
+
+    """Global variables"""
+    global GRAPH
+    global NEW
+    global CULL
+
+    GRAPH = False
+    NEW = False
+    CULL = False
+
+    """Parse command line arguments"""
     try:
-        opts, _ = getopt(sys.argv[1:], "hc:", ["help", "config="])
+        opts, _ = getopt(sys.argv[1:], "hgndc:", ["help", "graph", "new", "delete", "config="])
     except GetoptError as err:
         print(err)
         usage()
@@ -32,32 +43,55 @@ def main():
         elif opt in ("-c", "--config"):
             print("alt Config file not currently supported")
             sys.exit(2)
+        elif opt in ("-g", "--graph"):
+            print("Graphing all .wav files post split.")
+            GRAPH = True
+        elif opt in ("-n", "--new"):
+            print("Creating a new session folder.")
+            NEW = True
+        elif opt in ("-d", "--delete"):
+            print("Delete data in data_home folder")
+            CULL = True
         else:
             print("Unknown option")
             usage()
             sys.exit(2)
+
     config = utils.get_config()
-    print("Welcome to the music downloader!")
-    print("Enter the url of a spotify playlist or song")
-    url = input()
+    if CULL:
+        utils.cull_data_home(config["data_home"])
+        utils.make_data_home(config["data_home"])
+    if NEW:
+        utils.attempt_archive(config["data_home"])
+        print("Welcome to the music downloader!")
+        print("Enter the url of a spotify playlist or song")
+        url = input()
 
-    print("Name the folder you want to save the music to")
-    fold_end = input()
+        print("Name the folder you want to save the music to")
+        fold_end = input()
 
 
-    session_folder, seperated_folder = utils.create_unique_folder(config["data_home"], fold_end)
-    spotdl = Spotdl(config["client_id"], config["client_secret"], output=session_folder)
-    songs = spotdl.search([url])
-    spotdl.download_songs(songs)
+        session_folder, seperated_folder = utils.create_unique_folder(config["data_home"], fold_end)
+        spotdl = Spotdl(config["client_id"], config["client_secret"], output=session_folder)
+        songs = spotdl.search([url])
+        spotdl.download_songs(songs)
 
-    songs_downloaded = glob(session_folder + "/*.mp3")
-    cmd = ["spleeter", "separate", "-o", seperated_folder, "-p", "spleeter:5stems"]
-    for song in songs_downloaded:
-        cmd.append(song)
-        try:
-            subprocess.run(cmd, check=True)
-        except subprocess.CalledProcessError as err:
-            print("Error: %s", str(err))
-        cmd.pop()
+        songs_downloaded = glob(session_folder + "/*.mp3")
+        cmd = ["spleeter", "separate", "-o", seperated_folder, "-p", "spleeter:5stems"]
+        for song in songs_downloaded:
+            cmd.append(song)
+            try:
+                subprocess.run(cmd, check=True)
+            except subprocess.CalledProcessError as err:
+                print("Error: %s", str(err))
+            cmd.pop()
+
+    if GRAPH:
+        active_folder = utils.get_active_folder(config["data_home"])
+        if active_folder is None:
+            print("No active folder found")
+            sys.exit(2)
+        utils.graph_all_wav_for_each_folder(active_folder)
+
 if __name__ == "__main__":
     main()

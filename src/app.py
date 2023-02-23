@@ -31,12 +31,15 @@ def main():
 
     """Parse command line arguments"""
     try:
-        opts, _ = getopt(sys.argv[1:], "hgndc:", ["help", "graph", "new", "delete", "config="])
+        opts, _ = getopt(sys.argv[1:], "rhgndc:", ["reconfig", "help", "graph", "new", "delete", "config="])
     except GetoptError as err:
         print(err)
         usage()
         sys.exit(2)
     for opt, _ in opts:
+        if opt in ("-r", "--reconfig"):
+            print("Reconfiguring config file")
+            utils.reconfigure()
         if opt in ("-h", "--help"):
             usage()
             sys.exit()

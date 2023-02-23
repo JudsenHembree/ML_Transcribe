@@ -58,9 +58,9 @@ def attempt_archive(data_home):
         if os.path.isdir(folder):
             if not folder.endswith("archive"):
                 try:
-                    path = os.path.join(data_home, "archive")
+                    arcpath = os.path.join(data_home, "archive")
                     print("Archiving %s to %s", folder, path)
-                    proc = run(["mv", folder, path], \
+                    proc = run(["mv", folder, arcpath], \
                             stdout=PIPE, stderr=PIPE, check=True)
                     if proc.returncode != 0:
                         print("Error: %s", str(proc.stderr))

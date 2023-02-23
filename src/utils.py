@@ -140,20 +140,22 @@ def graph_wav(file):
     try:
         # Plot the sound wave
         fig = plt.figure(figsize=(10, 6), edgecolor='k')
-        plt.title(file)
+        plt.title("Wav Amplitude " + str(file))
         plt.plot(sound_info)
         plt.xlabel("Time")
         plt.ylabel("Amplitude")
         plt.autoscale(tight=True)
-        plt.savefig(file + ".png")
+        plt.savefig(file + "_amp.png")
         plt.close(fig)
 
         # Plot the spectrogram
         pylab.figure(num=None, figsize=(19, 12))
         pylab.subplot(111)
-        pylab.title(file)
+        pylab.title("Spectrogram of " + str(file))
+        pylab.xlabel("Time")
+        pylab.ylabel("Frequency (Hz)")
         pylab.specgram(sound_info, Fs=frame_rate)
-        pylab.savefig(file + "spec.png")
+        pylab.savefig(file + "_spec.png")
         pylab.close()
     except ValueError:
         print("Error: %s is empty", file)
@@ -181,5 +183,5 @@ def wav_to_midi(wav_file):
         print("Error: %s", str(err))
         return
     print("Writing midi file")
-    midi_file = os.path.join(os.path.dirname(wav_file), os.path.basename(wav_file) + ".mid")
+    midi_file = os.path.join(os.path.dirname(wav_file), os.path.basename(wav_file) + "_conv_midi.mid")
     midi_data.write(midi_file)

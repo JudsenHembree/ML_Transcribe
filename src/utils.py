@@ -63,6 +63,17 @@ def attempt_archive(data_home):
 
 def get_config(file='/ML_Transcribe/config/config.json'):
     """Reads the config file and returns a dictionary"""
+    if not os.path.exists(file):
+        print("Warning: %s not found", file)
+        print("You were probably using a symlink")
+        print("Attempting to find config file")
+        pwd = os.getcwd()
+        if "ML_Transcribe" in pwd:
+            pwd = pwd[:pwd.find("ML_Transcribe")]
+            file = pwd + "ML_Transcribe/config/config.json"
+        else:
+            print("Error: Could not find config file")
+            sys.exit(2)
     with open(file, encoding="utf-8") as conf:
         config = json.load(conf)
     return config

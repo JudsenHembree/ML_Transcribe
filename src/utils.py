@@ -138,9 +138,8 @@ def graph_wav(file):
     frame_rate = wav.getframerate()
     wav.close()
     try:
-        # Plot the sound wave
-        fig = plt.figure(figsize=(10, 6), edgecolor='k')
-        plt.title("Wav Amplitude " + str(file))
+        fig = plt.figure(autoscale_on=True, figsize=(8, 4))
+        plt.title(file)
         plt.plot(sound_info)
         plt.xlabel("Time")
         plt.ylabel("Amplitude")

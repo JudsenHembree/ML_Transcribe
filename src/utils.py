@@ -140,7 +140,7 @@ def graph_wav(file):
     try:
         # Plot the sound wave
         fig = plt.figure(figsize=(10, 6), edgecolor='k')
-        plt.title(file)
+        plt.title("Wav Amplitude " + str(file))
         plt.plot(sound_info)
         plt.xlabel("Time")
         plt.ylabel("Amplitude")
@@ -183,5 +183,5 @@ def wav_to_midi(wav_file):
         print("Error: %s", str(err))
         return
     print("Writing midi file")
-    midi_file = os.path.join(os.path.dirname(wav_file), os.path.basename(wav_file) + ".mid")
+    midi_file = os.path.join(os.path.dirname(wav_file), os.path.basename(wav_file) + "_conv_midi.mid")
     midi_data.write(midi_file)

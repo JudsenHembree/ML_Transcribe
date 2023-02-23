@@ -35,7 +35,7 @@ def reconfigure():
 
 def reconfigure():
     """Reconfigures the config file"""
-    config = get_config()
+    config, file = get_config()
     pwd = os.getcwd()
     print("Current data home is %s", config["data_home"])
     config["data_home"] = pwd + "/data"
@@ -44,7 +44,7 @@ def reconfigure():
     config["MODEL_DIRECTORY"] = pwd + "/models"
     print("New model directory is %s", config["MODEL_DIRECTORY"])
 
-    with open('/ML_Transcribe/config/config.json', 'w') as conf:
+    with open(file, 'w') as conf:
         json.dump(config, conf)
 
 def check_data_home(data_home):

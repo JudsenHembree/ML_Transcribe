@@ -25,11 +25,13 @@ def main():
     global NEW
     global CULL
     global RECONF
+    global ML_Home
 
     GRAPH = False
     NEW = False
     CULL = False
     RECONF = False
+    ML_Home = "/ML_Transcribe"
 
 
     """Parse command line arguments"""
@@ -43,7 +45,7 @@ def main():
         if opt in ("-r", "--reconfig"):
             print("Reconfiguring.")
             RECONF = True
-        if opt in ("-h", "--help"):
+        elif opt in ("-h", "--help"):
             usage()
             sys.exit()
         elif opt in ("-c", "--config"):
@@ -64,7 +66,7 @@ def main():
             sys.exit(2)
 
     if RECONF:
-        utils.reconfigure()
+        ML_Home = utils.reconfigure()
 
     config, file = utils.get_config()
 

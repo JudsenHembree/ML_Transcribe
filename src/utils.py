@@ -1,27 +1,31 @@
 """
 Utility functions for the project
 """
-import sys
-import json
-import os
-import wave
-import numpy as np
-from matplotlib import pyplot as plt
+from pathlib import Path as path
 from subprocess import run, PIPE, CalledProcessError
 from glob import glob
+import sys
+import os
+import json
+import wave
+from matplotlib import pyplot as plt
+import numpy as np
 
 def reconfigure():
     """Reconfigures the config file"""
     config, file = get_config()
+    print(config)
+    print(file)
     pwd = os.getcwd()
-    print("Current data home is %s", config["data_home"])
-    config["data_home"] = pwd + "/data"
-    print("New data home is %s", config["data_home"])
-    print("Current model directory is %s", config["MODEL_DIRECTORY"])
-    config["MODEL_DIRECTORY"] = pwd + "/models"
-    print("New model directory is %s", config["MODEL_DIRECTORY"])
+    print("Current data home is %s", str(config["data_home"]))
+    config["data_home"] = str(path(pwd + "/data"))
+    print("New data home is %s", str(config["data_home"]))
+    print("Current model directory is %s", str(config["MODEL_DIRECTORY"]))
+    config["MODEL_DIRECTORY"] = str(path(pwd + "/models"))
+    print("New model directory is %s", str(config["MODEL_DIRECTORY"]))
 
     with open(file, 'w') as conf:
+        print(config)
         json.dump(config, conf)
 
 def check_data_home(data_home):
@@ -34,7 +38,8 @@ def check_data_home(data_home):
 def get_active_folder(data_home):
     """Returns the active folder"""
     check_data_home(data_home)
-    for folder in glob(data_home + "/*"):
+    glob_path = path(data_home + "/*")
+    for folder in glob(str(glob_path)):
         if os.path.isdir(folder):
             if not folder.endswith("archive"):
                 print("Active folder is %s", folder)
@@ -43,7 +48,8 @@ def get_active_folder(data_home):
 
 def attempt_archive(data_home):
     """Attempts to archive prior run into the archive folder"""
-    dat = glob(data_home + "/*")
+    glob_path = path(data_home + "/*")
+    dat = glob(str(glob_path))
     print(dat)
     if "archive" not in os.listdir(data_home):
         print("Creating archive folder")
@@ -61,21 +67,30 @@ def attempt_archive(data_home):
                 except CalledProcessError as err:
                     print("Error: %s", str(err))
 
-def get_config(file='/ML_Transcribe/config/config.json'):
+def get_config(file=path('/ML_Transcribe/config/config.json')):
     """Reads the config file and returns a dictionary"""
+    print("Reading config file")
     if not os.path.exists(file):
+        print("Error: %s not found", file)
         print("Warning: %s not found", file)
         print("You were probably using a symlink")
         print("Attempting to find config file")
         pwd = os.getcwd()
         if "ML_Transcribe" in pwd:
             pwd = pwd[:pwd.find("ML_Transcribe")]
-            file = pwd + "ML_Transcribe/config/config.json"
+            file = path(pwd + "ML_Transcribe/config/config.json")
         else:
             print("Error: Could not find config file")
             sys.exit(2)
+    else:
+        print("Found config file at %s", file)
     with open(file, encoding="utf-8") as conf:
-        config = json.load(conf)
+        print("Loading config file")
+        try:
+            config = json.load(conf)
+        except json.decoder.JSONDecodeError as err:
+            print("Error: %s", str(err))
+            sys.exit(2)
     return config, file
 
 def create_unique_folder(data_home, fold_end):

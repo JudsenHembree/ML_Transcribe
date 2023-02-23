@@ -124,7 +124,7 @@ def graph_all_wav(folder):
         if file.endswith(".wav"):
             graph_wav(os.path.join(folder, file))
             # wav to midi kinda trash ngl
-            #wav_to_midi(os.path.join(folder, file))
+            # wav_to_midi(os.path.join(folder, file))
 
 def graph_wav(file):
     """Graphs a .wav file"""

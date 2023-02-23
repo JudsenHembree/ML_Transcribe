@@ -123,7 +123,7 @@ def graph_all_wav(folder):
         print("Graphing %s", file)
         if file.endswith(".wav"):
             graph_wav(os.path.join(folder, file))
-            # wav_to_midi(os.path.join(folder, file))
+            wav_to_midi(os.path.join(folder, file))
 
 def graph_wav(file):
     """Graphs a .wav file"""
@@ -172,7 +172,3 @@ def wav_to_midi(wav_file):
     print("Writing midi file")
     midi_file = os.path.join(os.path.dirname(wav_file), os.path.basename(wav_file) + ".mid")
     midi_data.write(midi_file)
-    print("Writing midi file as html to %s", midi_file + ".html")
-    plotter = Plotter()
-    plotter.save(midi_data, midi_file + ".html")
-

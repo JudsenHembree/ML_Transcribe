@@ -9,6 +9,7 @@ import os
 import json
 import wave
 from matplotlib import pyplot as plt
+import pylab
 import numpy as np
 from basic_pitch.inference import predict
 from basic_pitch import ICASSP_2022_MODEL_PATH
@@ -134,8 +135,10 @@ def graph_wav(file):
         return
     frames = wav.readframes(-1)
     sound_info = np.fromstring(frames, 'int16')
+    frame_rate = wav.getframerate()
     wav.close()
     try:
+        # Plot the sound wave
         fig = plt.figure(figsize=(10, 6), edgecolor='k')
         plt.title(file)
         plt.plot(sound_info)
@@ -144,6 +147,14 @@ def graph_wav(file):
         plt.autoscale(tight=True)
         plt.savefig(file + ".png")
         plt.close(fig)
+
+        # Plot the spectrogram
+        pylab.figure(num=None, figsize=(19, 12))
+        pylab.subplot(111)
+        pylab.title(file)
+        pylab.specgram(sound_info, Fs=frame_rate)
+        pylab.savefig(file + "spec.png")
+        pylab.close()
     except ValueError:
         print("Error: %s is empty", file)
     except MemoryError:

@@ -10,6 +10,11 @@ import json
 import wave
 from matplotlib import pyplot as plt
 import numpy as np
+from basic_pitch.inference import predict
+from basic_pitch import ICASSP_2022_MODEL_PATH
+from visual_midi import Plotter
+from visual_midi import Preset
+
 
 def reconfigure():
     """Reconfigures the config file"""
@@ -108,9 +113,10 @@ def graph_all_wav_for_each_folder(folder):
     # find seperated folder
     for file in os.listdir(folder):
         if file.endswith("seperated"):
-            for innerFile in os.listdir(os.path.join(folder, file)):
-                if os.path.isdir(os.path.join(folder, file, innerFile)):
-                    graph_all_wav(os.path.join(folder, file, innerFile))
+            for inner_file in os.listdir(os.path.join(folder, file)):
+                if os.path.isdir(os.path.join(folder, file, inner_file)):
+                    graph_all_wav(os.path.join(folder, file, inner_file))
+                    wav_to_midi(os.path.join(folder, file, inner_file))
 
 def graph_all_wav(folder):
     """Graphs all .wav files in a folder"""
@@ -128,7 +134,6 @@ def graph_wav(file):
         return
     frames = wav.readframes(-1)
     sound_info = np.fromstring(frames, 'int16')
-    frame_rate = wav.getframerate()
     wav.close()
     try:
         fig = plt.figure(figsize=(10, 6), edgecolor='k')
@@ -155,3 +160,19 @@ def make_data_home(data_home):
     """Makes the data home"""
     if not os.path.exists(data_home):
         os.makedirs(data_home)
+
+def wav_to_midi(wav_file):
+    """Converts a wav file to a midi file"""
+    print("Converting %s to midi", wav_file)
+    try:
+        model_output, midi_data, note_activations = predict(wav_file)
+    except Exception as err:
+        print("Error: %s", str(err))
+        return
+    print("Writing midi file")
+    midi_file = os.path.join(os.path.dirname(wav_file), os.path.basename(wav_file) + ".mid")
+    midi_data.write(midi_file)
+    print("Writing midi file as html to %s", midi_file + ".html")
+    plotter = Plotter()
+    plt = plotter.save(midi_data, midi_file + ".html")
+

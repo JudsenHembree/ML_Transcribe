@@ -19,13 +19,23 @@ sn -s $(pwd)/ML_Transcribe /ML_Transcribe
 ```
 Or you can just manually do the full path without the pwd thing.
 
+### Running on windows
+On windows symlinks are a pain. 
+I have the code try to find your full path and set up the config based off of that. 
+*Should* work out of the box. 
+
 ## repo structure
 For each folder
 - config
     - config.json for program behavior. Where to route .mp3s etc.
     - put stuff here as needed
 - data
-    - download mp3s to a folder specified by user input here.
+    - some folder name (active folder)
+        - where the seperated audio lands. 
+        - mp3s
+            - download mp3s to a folder specified by user input here.
+    - archive
+        - prior runs (differentiated by timestamp if same folder name)
 - src
     - python app
     - utils module
@@ -36,13 +46,16 @@ There is a makefile if you want
 ```
 make clean
 ```
-- do a run
+- do a run (WILL CALL CLEAN AS WELL)
 ```
 make run
 ```
 
 You can obviously not use the makefile
 ```
-python src/app.py
+python src/app.py --help
 ```
 ![demo](./gifs/demo.gif)
+
+## Disclamers
+Sometimes spleeter fails and not every file survives running. There is no guarantee that a playlist of 30 songs results in a dataset of 30 songs. 

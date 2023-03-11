@@ -4,6 +4,7 @@ This app is a music downloader that uses the spotdl library to download music fr
 and the spleeter library to separate the music into its different parts
 """
 import sys
+from pathlib import Path as path
 import subprocess
 from getopt import getopt, GetoptError
 from glob import glob
@@ -20,22 +21,17 @@ def usage():
 def main():
     """Main function of the program"""
 
-    """Global variables"""
-    global GRAPH
-    global NEW
-    global CULL
-    global RECONF
-    global ML_Home
-
     GRAPH = False
     NEW = False
     CULL = False
     RECONF = False
-    ML_Home = "/ML_Transcribe"
+    MIDI = False
+    Custom_Data = False
+    ML_Home = path("/ML_Transcribe")
 
     """Parse command line arguments"""
     try:
-        opts, _ = getopt(sys.argv[1:], "rhgndc:", ["reconfig", "help", "graph", "new", "delete", "config="])
+        opts, _ = getopt(sys.argv[1:], "rhgndcm:", ["Custom", "midi", "reconfig", "help", "graph", "new", "delete", "config="])
     except GetoptError as err:
         print(err)
         usage()
@@ -59,6 +55,12 @@ def main():
         elif opt in ("-d", "--delete"):
             print("Delete data in data_home folder")
             CULL = True
+        elif opt in ("-m", "--midi"):
+            print("Converting wav to midi")
+            MIDI = True
+        elif opt in ("--Custom"):
+            print("Converting wav to custom data")
+            Custom_Data = True
         else:
             print("Unknown option" + opt) 
             usage()
@@ -72,6 +74,7 @@ def main():
     if CULL:
         utils.cull_data_home(config["data_home"])
         utils.make_data_home(config["data_home"])
+
     if NEW:
         utils.attempt_archive(config["data_home"])
         print("Welcome to the music downloader!")
@@ -87,7 +90,8 @@ def main():
         songs = spotdl.search([url])
         spotdl.download_songs(songs)
 
-        songs_downloaded = glob(session_folder + "/*.mp3")
+        songs_downloaded_path = path(session_folder + "/*.mp3")
+        songs_downloaded = glob(str(songs_downloaded_path))
         cmd = ["spleeter", "separate", "-o", seperated_folder, "-p", "spleeter:5stems"]
         for song in songs_downloaded:
             cmd.append(song)
@@ -97,12 +101,21 @@ def main():
                 print("Error: %s", str(err))
             cmd.pop()
 
+        # clean up low apmlitude on each wav
+        utils.clean_wav(seperated_folder)
+
     if GRAPH:
         active_folder = utils.get_active_folder(config["data_home"])
         if active_folder is None:
             print("No active folder found")
             sys.exit(2)
-        utils.graph_all_wav_for_each_folder(active_folder)
+        utils.graph_all_wav_for_each_folder(active_folder, MIDI)
+
+    if Custom_Data:
+        active_folder = utils.get_active_folder(config["data_home"])
+        utils.remove_non_spleeter_for_Active_folder(active_folder)
+        utils.custom_data_transform(active_folder)
+
 
 if __name__ == "__main__":
     main()

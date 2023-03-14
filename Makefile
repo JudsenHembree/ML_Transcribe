@@ -1,4 +1,4 @@
 run: clean
-	python src/app.py --new --graph
+	python src/app.py --new --record
 clean:
 	rm -rf data/*

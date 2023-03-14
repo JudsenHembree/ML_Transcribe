@@ -1,4 +1,12 @@
 # ML_Transcribe
+## Current state of project
+1. pull audio from a spotify link
+2. for said audio seperate it into 5 stem model
+3. clean it up a bit
+4. pull out highest average amplitude section of the split audio. (what part of the song has a lot of piano...)
+5. Play the selected audio and record audio as the user hums/sings/something along
+### TODO
+- come up with a model that after all recordings have been made will make predictions. 
 ## Setup
 I'm assuming you run python3
 You need to install
@@ -9,6 +17,13 @@ pip install spleeter
 - spotdl
 ```
 pip install spotdl
+```
+-pyaudio
+```
+sudo apt-get install python3-pyaudio
+```
+```
+sudo apt install portaudio19-dev
 ```
 
 The code uses a symlink to this repo.

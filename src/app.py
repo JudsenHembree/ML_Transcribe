@@ -22,16 +22,16 @@ def main():
     """Main function of the program"""
 
     GRAPH = False
+    RECORD = False
     NEW = False
     CULL = False
     RECONF = False
     MIDI = False
-    Custom_Data = False
     ML_Home = path("/ML_Transcribe")
 
     """Parse command line arguments"""
     try:
-        opts, _ = getopt(sys.argv[1:], "rhgndcm:", ["Custom", "midi", "reconfig", "help", "graph", "new", "delete", "config="])
+        opts, _ = getopt(sys.argv[1:], "rhgndcm:", ["midi", "reconfig", "help", "graph", "new", "delete", "record", "config="])
     except GetoptError as err:
         print(err)
         usage()
@@ -47,7 +47,7 @@ def main():
             print("alt Config file not currently supported")
             sys.exit(2)
         elif opt in ("-g", "--graph"):
-            print("Graphing all .wav files post split.")
+            print("Generating graphs.")
             GRAPH = True
         elif opt in ("-n", "--new"):
             print("Creating a new session folder.")
@@ -58,9 +58,9 @@ def main():
         elif opt in ("-m", "--midi"):
             print("Converting wav to midi")
             MIDI = True
-        elif opt in ("--Custom"):
-            print("Converting wav to custom data")
-            Custom_Data = True
+        elif opt in ("--record"):
+            print("Recording")
+            RECORD = True
         else:
             print("Unknown option" + opt) 
             usage()
@@ -103,18 +103,25 @@ def main():
 
         # clean up low apmlitude on each wav
         utils.clean_wav(seperated_folder)
+        # convert spotdl downloaded mp3 to wav to standardize all audio to wav
+        utils.convert_all_mp3_to_wav(session_folder)
+        # generate a selection for each wav file (10 seconds of highest amplitude)
+        utils.generate_selections_for_each_folder(seperated_folder)
+
+    if RECORD:
+        active_folder = utils.get_active_folder(config["data_home"])
+        if active_folder is None:
+            print("No active folder found")
+            sys.exit(2)
+        utils.record(active_folder)
 
     if GRAPH:
+        # todo needs updating lots of changes
         active_folder = utils.get_active_folder(config["data_home"])
         if active_folder is None:
             print("No active folder found")
             sys.exit(2)
         utils.graph_all_wav_for_each_folder(active_folder, MIDI)
-
-    if Custom_Data:
-        active_folder = utils.get_active_folder(config["data_home"])
-        utils.remove_non_spleeter_for_Active_folder(active_folder)
-        utils.custom_data_transform(active_folder)
 
 
 if __name__ == "__main__":

@@ -7,6 +7,8 @@ from glob import glob
 from shutil import rmtree
 import sys
 import os
+import array
+import shutil
 import json
 import wave
 import pyaudio
@@ -74,21 +76,22 @@ def attempt_archive(data_home):
                 print("Archiving %s to %s", folder, path)
                 renamed = os.path.join(arcpath, os.path.basename(folder))
                 try:
-                    os.rename(folder, renamed)
+                    shutil.move(folder, renamed)
                 except FileExistsError:
                     print("Error: %s already exists", renamed)
                     print("Adding timestamp to folder name")
                     renamed = os.path.join(arcpath, os.path.basename(folder) + "_" + str(os.path.getmtime(folder)))
-                    os.rename(folder, renamed)
+                    shutil.move(folder, renamed)
                 except OSError:
                     print("Error: %s already exists", folder)
                     print("Adding timestamp to folder name")
                     renamed = os.path.join(arcpath, os.path.basename(folder) + "_" + str(os.path.getmtime(folder)))
-                    os.rename(folder, renamed)
+                    shutil.move(folder, renamed)
 
 def get_config(file=path('/ML_Transcribe/config/config.json')):
     """Reads the config file and returns a dictionary"""
     print("Reading config file")
+    inDocker = os.environ.get("Docker", False)
     if not os.path.exists(file):
         print("Error: %s not found", file)
         print("Warning: %s not found", file)
@@ -98,6 +101,8 @@ def get_config(file=path('/ML_Transcribe/config/config.json')):
         if "ML_Transcribe" in pwd:
             pwd = pwd[:pwd.find("ML_Transcribe")]
             file = path(pwd + "ML_Transcribe/config/config.json")
+        elif inDocker:
+            file = path("/config/config.json")
         else:
             print("Error: Could not find config file")
             sys.exit(2)
@@ -449,6 +454,7 @@ def hanning(wav_file, dest):
     selected_channels = wf.getnchannels()
     chunk = 1024
     duration = 10 # seconds
+    data = array.array('h')
 
     # skip to start
     wf.setpos(int(start_time * wf.getframerate()))
@@ -594,7 +600,7 @@ def record(folder):
         record_frames = []
         chunk = 1024
         sample_format = pyaudio.paInt16
-        channels = 2
+        channels = wf.getnchannels()
         fs = 44100
         seconds = 10
         outwf = wave.open(outwav, 'wb')
@@ -613,11 +619,14 @@ def record(folder):
         print("Mimic the following audio focusing on the " + str(base.split(".")[0]) + " part.")
         input("Press enter when ready")
         #TODO glitchy not sure why
+        #TODO poppy in Docker idk why
+        record_data = array.array('h')
         for _ in tqdm(range(0, int(wf.getframerate() / chunk * seconds)), colour='green'):
             data = wf.readframes(chunk)
             stream.write(data)
             # record
-            record_data = stream_record.read(chunk)
+            # need exception_on_overflow for docker (THERE IS SOME BUG HERE)
+            record_data = stream_record.read(chunk, exception_on_overflow = False)
             record_frames.append(record_data)
 
         # save the Recording

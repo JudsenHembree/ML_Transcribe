@@ -1,0 +1,7 @@
+pyaudio
+spotdl
+spleeter
+tqdm
+matplotlib
+basic_pitch
+ffmpeg

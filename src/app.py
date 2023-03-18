@@ -4,6 +4,7 @@ This app is a music downloader that uses the spotdl library to download music fr
 and the spleeter library to separate the music into its different parts
 """
 import sys
+import shutil
 from pathlib import Path as path
 import subprocess
 from getopt import getopt, GetoptError
@@ -86,12 +87,18 @@ def main():
 
 
         session_folder, seperated_folder = utils.create_unique_folder(config["data_home"], fold_end)
-        spotdl = Spotdl(config["client_id"], config["client_secret"], output=session_folder)
+        spotdl = Spotdl(config["client_id"], config["client_secret"])
         songs = spotdl.search([url])
         spotdl.download_songs(songs)
 
         songs_downloaded_path = path(session_folder + "/*.mp3")
+        # get downlaoded and move them to session folder
+        songs_downloaded = glob("*.mp3")
+        for song in songs_downloaded:
+            shutil.move(song, session_folder + "/" + song)
+
         songs_downloaded = glob(str(songs_downloaded_path))
+        # separate the music into its different parts
         cmd = ["spleeter", "separate", "-o", seperated_folder, "-p", "spleeter:5stems"]
         for song in songs_downloaded:
             cmd.append(song)

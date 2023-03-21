@@ -28,11 +28,12 @@ def main():
     CULL = False
     RECONF = False
     MIDI = False
+    TRAIN = False
     ML_Home = path("/ML_Transcribe")
 
     """Parse command line arguments"""
     try:
-        opts, _ = getopt(sys.argv[1:], "rhgndcm:", ["midi", "reconfig", "help", "graph", "new", "delete", "record", "config="])
+        opts, _ = getopt(sys.argv[1:], "rhgndcm:", ["train", "midi", "reconfig", "help", "graph", "new", "delete", "record", "config="])
     except GetoptError as err:
         print(err)
         usage()
@@ -62,6 +63,9 @@ def main():
         elif opt in ("--record"):
             print("Recording")
             RECORD = True
+        elif opt in ("--train"):
+            print("Training")
+            TRAIN = True
         else:
             print("Unknown option" + opt) 
             usage()
@@ -129,6 +133,11 @@ def main():
             print("No active folder found")
             sys.exit(2)
         utils.graph_all_wav_for_each_folder(active_folder, MIDI)
+
+    if TRAIN:
+        active_folder = utils.get_active_folder(config["data_home"])
+        utils.collect_recordings_place_in_folder(active_folder)
+        utils.generate_CNN_inputs(active_folder)
 
 
 if __name__ == "__main__":

@@ -16,6 +16,7 @@ from tqdm import tqdm
 from matplotlib import pyplot as plt
 import numpy as np
 import librosa
+import librosa.display
 import soundfile as sf
 from basic_pitch.inference import predict
 
@@ -668,3 +669,62 @@ def convert_all_mp3_to_wav(folder):
         convert_to_wav(file)
 
     
+def collect_recordings_place_in_folder(folder):
+    """Collects all recorded audio and places them in a folder for each stem"""
+    print("Gathering resources")
+    # get all the recordings
+    stems = ("bass", "drums", "other", "vocals", "piano")
+    for stem in stems:
+        recordings = glob(folder + "/seperated/*/recordings/" + stem + ".wav")
+        print(str(stem) + ": " + str(recordings))
+        # make the folders
+        try:
+            os.makedirs(folder + "/recordings/" + stem, exist_ok=True)
+        except PermissionError:
+            print("Permission denied")
+            print("Claiming the data")
+            os.system("sudo chown -R $USER:$USER " + folder)
+            os.makedirs(folder + "/recordings/" + stem, exist_ok=True)
+
+        # copy the recordings
+        # use a count to differentiate
+        count = 0
+        for recording in recordings:
+            shutil.copy(recording, folder + "/recordings/" + stem + "/" + str(count) + ".wav")
+            count += 1
+
+def generate_CNN_inputs(folder):
+    """for each stem generate spectrograms for the cnn"""
+    print("Making this an image problem.")
+    if "recordings" not in os.listdir(folder):
+        print("you need to record first")
+        # make this throw and kill program later
+        return
+    if "spectrograms" not in os.listdir(folder):
+        os.makedirs(folder + "/spectrograms", exist_ok=True)
+    for stem in os.listdir(folder + "/recordings"):
+        if stem not in os.listdir(folder + "/spectrograms"):
+            os.makedirs(folder + "/spectrograms/" + stem, exist_ok=True)
+        # glob the recordings then loop
+        globbed = glob(folder + "/recordings/" + stem + "/*.wav")
+        for recording in globbed:
+            # make the spectrogram
+            head, base = os.path.split(recording)
+            # make the new file name
+            new_file = os.path.join(head, base.replace(".wav", ".png"))
+            new_file = new_file.replace("recordings", "spectrograms")
+            # create the spectrogram
+            sample, sr = librosa.load(recording, sr=44100)
+            mel = librosa.feature.melspectrogram(y=sample, sr=sr)
+            fig, ax = plt.subplots()
+            mel_dB = librosa.power_to_db(mel, ref=np.max)
+            img = librosa.display.specshow(mel_dB, x_axis='time', y_axis='mel', sr=sr, 
+                                           fmax=8000, ax=ax)
+            fig.colorbar(img, ax=ax, format='%+2.0f dB')
+            ax.set(title='Mel-frequency spectrogram')
+            plt.savefig(new_file)
+
+
+
+
+        

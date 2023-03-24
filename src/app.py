@@ -5,12 +5,15 @@ and the spleeter library to separate the music into its different parts
 """
 import sys
 import shutil
+import torch
 from pathlib import Path as path
 import subprocess
 from getopt import getopt, GetoptError
 from glob import glob
 from spotdl import Spotdl
 import utils
+import model
+import data
 
 def usage():
     """Prints the usage of the program"""
@@ -126,19 +129,34 @@ def main():
             sys.exit(2)
         utils.record(active_folder)
 
-    if GRAPH:
-        # todo needs updating lots of changes
-        active_folder = utils.get_active_folder(config["data_home"])
-        if active_folder is None:
-            print("No active folder found")
-            sys.exit(2)
-        utils.graph_all_wav_for_each_folder(active_folder, MIDI)
-
     if TRAIN:
         active_folder = utils.get_active_folder(config["data_home"])
         utils.collect_recordings_place_in_folder(active_folder)
-        utils.generate_CNN_inputs(active_folder)
+        metadata = utils.generate_meta_data(active_folder)
+        # generate the melspectrograms for each wav file recording
+        if GRAPH:
+            utils.generate_CNN_inputs(active_folder)
 
+        # init the dataset
+        dataset = data.Data(metadata)
+        items = len(dataset)
+        train = int(items * 0.8)
+        val = items - train
+        # random split is how we split into training and test sets.
+        train_set, val_set = torch.utils.data.random_split(dataset, [train, val])
+
+        # create data loaders to load the data in batches
+        train_loader = torch.utils.data.DataLoader(train_set, batch_size=1, shuffle=True)
+        val_loader = torch.utils.data.DataLoader(val_set, batch_size=1, shuffle=False)
+
+        # create the model
+        # put on gpu if possible
+        model_to_train = model.Model()
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        model_to_train.to(device)
+
+        # train model
+        model.training(model_to_train, train_loader, 200, device)
 
 if __name__ == "__main__":
     main()

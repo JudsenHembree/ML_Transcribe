@@ -581,15 +581,32 @@ def hanning(wav_file, dest):
 #     wf.close()
 # """
 
+def is_too_quiet(file, min_amplitude):
+    """makes sure there is audio"""
+    # get the mean Amplitude
+    wav, _ = librosa.load(file, sr=44100)
+    mean_amplitude = np.mean(np.abs(wav))
+    print(f"Mean amplitude: {mean_amplitude}")
+    if mean_amplitude < min_amplitude:
+        return True
+    return False
+
 def record(folder):
     """for every song record hum along with selected 10 seconds"""
     for file in glob(folder + "/seperated/*/selections/*.wav"):
         # make the recording folder if needed
         outwav = file.replace("selections", "recordings")
         head, base = os.path.split(outwav)
+        # if other just skip
+        if base == "other.wav":
+            continue
         if not os.path.exists(head):
             os.makedirs(head)
         wf = wave.open(file, 'rb')
+        # if the audio is too quiet then skipping
+        if is_too_quiet(file, 0.001):
+            print(f"Skipping {file} because it is too quiet")
+            continue
         # open the stream
         p = pyaudio.PyAudio()
         stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
@@ -617,18 +634,31 @@ def record(folder):
                         frames_per_buffer=chunk,
                         input=True)
 
-        print("Mimic the following audio focusing on the " + str(base.split(".")[0]) + " part.")
-        input("Press enter when ready")
-        #TODO glitchy not sure why
-        #TODO poppy in Docker idk why
-        record_data = array.array('h')
-        for _ in tqdm(range(0, int(wf.getframerate() / chunk * seconds)), colour='green'):
-            data = wf.readframes(chunk)
-            stream.write(data)
-            # record
-            # need exception_on_overflow for docker (THERE IS SOME BUG HERE)
-            record_data = stream_record.read(chunk, exception_on_overflow = False)
-            record_frames.append(record_data)
+        selection = "" 
+        while selection != "2":
+            selection = input("Choose an option:\n\t1. Play without recording for practice\n\t2. Play with recording.\n")
+            if selection == "2":
+                print("Mimic the following audio focusing on the " + str(base.split(".")[0]) + " part.")
+                input("Press enter when ready")
+                #TODO glitchy not sure why
+                #TODO poppy in Docker idk why
+                record_data = array.array('h')
+                for _ in tqdm(range(0, int(wf.getframerate() / chunk * seconds)), colour='green'):
+                    data = wf.readframes(chunk)
+                    stream.write(data)
+                    # record
+                    # need exception_on_overflow for docker (THERE IS SOME BUG HERE)
+                    record_data = stream_record.read(chunk, exception_on_overflow = False)
+                    record_frames.append(record_data)
+            elif selection == "1":
+                print("Playing the following audio focusing on the " + str(base.split(".")[0]) + " part.")
+                input("Press enter when ready")
+                for _ in tqdm(range(0, int(wf.getframerate() / chunk * seconds)), colour='green'):
+                    data = wf.readframes(chunk)
+                    stream.write(data)
+            else:
+                print("Invalid option")
+            wf.rewind()
 
         # save the Recording
         outwf.writeframes(b''.join(record_frames))
@@ -693,6 +723,26 @@ def collect_recordings_place_in_folder(folder):
             shutil.copy(recording, folder + "/recordings/" + stem + "/" + str(count) + ".wav")
             count += 1
 
+def generate_meta_data(folder):
+    """create the csv for the CNN"""
+    print("Generating metadata")
+    csv = open(folder + "/metadata.csv", "w")
+    csv.write("filename,class_id,stem\n")
+    stems = (("bass", 0), ("drums", 1), ("other", 2), ("vocals", 3), ("piano", 4))
+    for stem in stems:
+        try:
+            recordings = glob(folder + "/recordings/" + stem[0] + "/*.wav")
+        except FileNotFoundError:
+            print("no recordings")
+            return
+        if len(recordings) == 0:
+            print("No recordings found for " + stem[0] + " skipping")
+            continue
+        for recording in recordings:
+            csv.write(recording + "," + str(stem[1]) + "," + stem[0] + "\n")
+    csv.close()
+    return folder + "/metadata.csv"
+
 def generate_CNN_inputs(folder):
     """for each stem generate spectrograms for the cnn"""
     print("Making this an image problem.")
@@ -723,6 +773,9 @@ def generate_CNN_inputs(folder):
             fig.colorbar(img, ax=ax, format='%+2.0f dB')
             ax.set(title='Mel-frequency spectrogram')
             plt.savefig(new_file)
+
+            plt.close()
+
 
 
 

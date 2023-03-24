@@ -629,7 +629,7 @@ def record(folder):
         p_record = pyaudio.PyAudio()
 
         stream_record = p_record.open(format=sample_format,
-                        channels=channels,
+                        channels=1,
                         rate=fs,
                         frames_per_buffer=chunk,
                         input=True)

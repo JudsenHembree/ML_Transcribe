@@ -773,7 +773,9 @@ def generate_CNN_inputs(folder):
             fig.colorbar(img, ax=ax, format='%+2.0f dB')
             ax.set(title='Mel-frequency spectrogram')
             plt.savefig(new_file)
+
             plt.close()
+
 
 
 

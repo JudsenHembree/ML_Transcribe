@@ -113,11 +113,18 @@ def main():
         cmd = ["spleeter", "separate", "-o", seperated_folder, "-p", "spleeter:5stems"]
         for song in songs_downloaded:
             cmd.append(song)
-            try:
-                subprocess.run(cmd, check=True)
-            except subprocess.CalledProcessError as err:
-                print("Error: %s", str(err))
-            cmd.pop()
+            ####### BELOW CODE WOULD RUN EACH SONG ONE AT A TIME #######
+            # cmd.append(song)
+            # try:
+            #     subprocess.run(cmd, check=True)
+            # except subprocess.CalledProcessError as err:
+            #     print("Error: %s", str(err))
+            # cmd.pop()
+        try:
+            subprocess.run(cmd, check=True)
+        except subprocess.CalledProcessError as err:
+            print("Error: %s", str(err))
+
 
         # clean up low apmlitude on each wav
         utils.clean_wav(seperated_folder)

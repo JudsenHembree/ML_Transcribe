@@ -594,7 +594,8 @@ def is_too_quiet(file, min_amplitude):
 
 def record(folder):
     """for every song record hum along with selected 10 seconds"""
-    globbed = glob(folder + "/seperated/*/selections/*.wav")
+    pth = path(folder + "/seperated/*/selections/*.wav")
+    globbed = glob(str(pth))
     if len(globbed) == 0:
         print("couldn't find selections.")
         return
@@ -698,7 +699,8 @@ def convert_all_mp3_to_wav(folder):
     """Converts all mp3 files in a folder to wav"""
     print("Converting all mp3 to wav")
     print(f"Folder: {folder}")
-    globbed = glob(folder + "/*.mp3")
+    pth = path(folder + "/*.mp3")
+    globbed = glob(str(pth))
     for file in globbed:
         print(f"Converting: {file}")
         convert_to_wav(file)
@@ -710,33 +712,39 @@ def collect_recordings_place_in_folder(folder):
     # get all the recordings
     stems = ("bass", "drums", "other", "vocals", "piano")
     for stem in stems:
-        recordings = glob(folder + "/seperated/*/recordings/" + stem + ".wav")
+        pth = path(folder + "/seperated/*/recordings/" + stem + ".wav")
+        recordings = glob(str(pth))
         print(str(stem) + ": " + str(recordings))
         # make the folders
         try:
-            os.makedirs(folder + "/recordings/" + stem, exist_ok=True)
+            dir_pth = path(folder + "/recordings/" + stem)
+            os.makedirs(dir_pth, exist_ok=True)
         except PermissionError:
             print("Permission denied")
             print("Claiming the data")
             os.system("sudo chown -R $USER:$USER " + folder)
-            os.makedirs(folder + "/recordings/" + stem, exist_ok=True)
+            dir_pth = path(folder + "/recordings/" + stem)
+            os.makedirs(dir_pth, exist_ok=True)
 
         # copy the recordings
         # use a count to differentiate
         count = 0
         for recording in recordings:
-            shutil.copy(recording, folder + "/recordings/" + stem + "/" + str(count) + ".wav")
+            print("Copying " + recording)
+            cpy_pth = path(folder + "/recordings/" + stem + "/" + str(count) + ".wav")
+            shutil.copy(recording, cpy_pth)
             count += 1
 
 def generate_meta_data(folder):
     """create the csv for the CNN"""
     print("Generating metadata")
-    csv = open(folder + "/metadata.csv", "w")
+    csv_pth = path(folder + "/metadata.csv")
+    csv = open(csv_pth, "w")
     csv.write("filename,class_id,stem\n")
     stems = (("bass", 0), ("drums", 1), ("other", 2), ("vocals", 3), ("piano", 4))
     for stem in stems:
         try:
-            recordings = glob(folder + "/recordings/" + stem[0] + "/*.wav")
+            recordings = glob(str(path(folder + "/recordings/" + stem[0] + "/*.wav")))
         except FileNotFoundError:
             print("no recordings")
             return
@@ -746,7 +754,7 @@ def generate_meta_data(folder):
         for recording in recordings:
             csv.write(recording + "," + str(stem[1]) + "," + stem[0] + "\n")
     csv.close()
-    return folder + "/metadata.csv"
+    return str(path(folder + "/metadata.csv"))
 
 def generate_CNN_inputs(folder):
     """for each stem generate spectrograms for the cnn"""
@@ -756,12 +764,12 @@ def generate_CNN_inputs(folder):
         # make this throw and kill program later
         return
     if "spectrograms" not in os.listdir(folder):
-        os.makedirs(folder + "/spectrograms", exist_ok=True)
-    for stem in os.listdir(folder + "/recordings"):
-        if stem not in os.listdir(folder + "/spectrograms"):
-            os.makedirs(folder + "/spectrograms/" + stem, exist_ok=True)
+        os.makedirs(str(path(folder + "/spectrograms", exist_ok=True)))
+    for stem in os.listdir(str(path(folder + "/recordings"))):
+        if stem not in os.listdir(str(path(folder + "/spectrograms"))):
+            os.makedirs(str(path(folder + "/spectrograms/" + stem)), exist_ok=True)
         # glob the recordings then loop
-        globbed = glob(folder + "/recordings/" + stem + "/*.wav")
+        globbed = glob(str(path(folder + "/recordings/" + stem + "/*.wav")))
         for recording in globbed:
             # make the spectrogram
             head, base = os.path.split(recording)
@@ -791,6 +799,3 @@ def legacy(data_home):
     # copy legacy data to data
     shutil.copytree(legacy_data, data_home)
 
-
-
-        

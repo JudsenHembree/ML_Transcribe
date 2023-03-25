@@ -238,10 +238,11 @@ def graph_wav(file):
     except Exception as err:
         print("Error: %s", str(err))
 
-def cull_data_home(data_home):
+def cull_data_home(data_home, remake=True):
     """Deletes the data home"""
     rmtree(data_home)
-    make_data_home(data_home)
+    if remake:
+        make_data_home(data_home)
 
 def make_data_home(data_home):
     """Makes the data home"""
@@ -593,7 +594,11 @@ def is_too_quiet(file, min_amplitude):
 
 def record(folder):
     """for every song record hum along with selected 10 seconds"""
-    for file in glob(folder + "/seperated/*/selections/*.wav"):
+    globbed = glob(folder + "/seperated/*/selections/*.wav")
+    if len(globbed) == 0:
+        print("couldn't find selections.")
+        return
+    for file in globbed:
         # make the recording folder if needed
         outwav = file.replace("selections", "recordings")
         head, base = os.path.split(outwav)
@@ -629,7 +634,7 @@ def record(folder):
         p_record = pyaudio.PyAudio()
 
         stream_record = p_record.open(format=sample_format,
-                        channels=1,
+                        channels=2,
                         rate=fs,
                         frames_per_buffer=chunk,
                         input=True)
@@ -777,6 +782,14 @@ def generate_CNN_inputs(folder):
             plt.close()
 
 
+def legacy(data_home):
+    """Moves the legacy split audio into data"""
+    print("Moving legacy data")
+    legacy_data = data_home.replace("data", "legacy_data")
+    # remove current data folder and remake it empty
+    cull_data_home(data_home, remake=False)
+    # copy legacy data to data
+    shutil.copytree(legacy_data, data_home)
 
 
 

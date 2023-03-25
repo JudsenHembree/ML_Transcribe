@@ -32,11 +32,12 @@ def main():
     RECONF = False
     MIDI = False
     TRAIN = False
+    LEGACY = False
     ML_Home = path("/ML_Transcribe")
 
     """Parse command line arguments"""
     try:
-        opts, _ = getopt(sys.argv[1:], "rhgndcm:", ["train", "midi", "reconfig", "help", "graph", "new", "delete", "record", "config="])
+        opts, _ = getopt(sys.argv[1:], "rhgndcm:", ["legacy", "train", "midi", "reconfig", "help", "graph", "new", "delete", "record", "config="])
     except GetoptError as err:
         print(err)
         usage()
@@ -69,6 +70,9 @@ def main():
         elif opt in ("--train"):
             print("Training")
             TRAIN = True
+        elif opt in ("--legacy"):
+            print("Using legacy data")
+            LEGACY = True
         else:
             print("Unknown option" + opt) 
             usage()
@@ -121,6 +125,17 @@ def main():
         utils.convert_all_mp3_to_wav(session_folder)
         # generate a selection for each wav file (10 seconds of highest amplitude)
         utils.generate_selections_for_each_folder(seperated_folder)
+
+    if LEGACY:
+        print("You are about to use pre-split audio files, and this will clean" \
+                "the data_home folder. Are you sure you want to continue? (y/n)")
+        answer = input()
+        if answer == "y":
+            utils.cull_data_home(config["data_home"])
+            utils.make_data_home(config["data_home"])
+            utils.legacy(config["data_home"])
+        else:
+            sys.exit(2)
 
     if RECORD:
         active_folder = utils.get_active_folder(config["data_home"])

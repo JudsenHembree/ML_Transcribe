@@ -5,8 +5,13 @@
 3. clean it up a bit
 4. pull out highest average amplitude section of the split audio. (what part of the song has a lot of piano...)
 5. Play the selected audio and record audio as the user hums/sings/something along
+6. Take selected audio and generate mel spectrograms.
+7. Feed those into a cnn for image classification (aka sound classification)
 ### TODO
-- come up with a model that after all recordings have been made will make predictions. 
+1. Test large dataset
+2. Some kinda "live test"
+3. Optimize the CNN
+4. Note transcription somehow
 ## Setup
 I'm assuming you run python3
 You need to install
@@ -18,12 +23,16 @@ pip install spleeter
 ```
 pip install spotdl
 ```
--pyaudio
+- pyaudio
 ```
 sudo apt-get install python3-pyaudio
 ```
 ```
 sudo apt install portaudio19-dev
+```
+- pytorch
+``` 
+pip install torch
 ```
 
 The code uses a symlink to this repo.

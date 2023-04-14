@@ -1,4 +1,5 @@
 # ML_Transcribe
+commit
 ## Current state of project
 1. pull audio from a spotify link
 2. for said audio seperate it into 5 stem model

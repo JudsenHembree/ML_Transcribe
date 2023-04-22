@@ -9,10 +9,13 @@ commit
 6. Take selected audio and generate mel spectrograms.
 7. Feed those into a cnn for image classification (aka sound classification)
 ### TODO
-1. Test large dataset
-2. Some kinda "live test"
-3. Optimize the CNN
-4. Note transcription somehow
+1. Note Transcription (JUD)
+2. Many parameter runs (programatic) (JONAH)
+    - Graph results 
+3. Re-test on a large Dataset (JUD)
+4. Windows tests (JUD/JONAH)
+5. Python modularize (JONAH)
+    - IF NOT DO SOME KIND OF SETUP.SH TO MAKE IT EASY FOR GRADER TO RUN.
 ## Setup
 I'm assuming you run python3
 You need to install

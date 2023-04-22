@@ -15,6 +15,8 @@ import utils
 import model
 import data
 
+from model import Model
+
 def usage():
     """Prints the usage of the program"""
     print("Usage:\npython app.py [options]\n")
@@ -33,11 +35,13 @@ def main():
     MIDI = False
     TRAIN = False
     LEGACY = False
+    TEST = False
+    SPECS = False
     ML_Home = path("/ML_Transcribe")
 
     """Parse command line arguments"""
     try:
-        opts, _ = getopt(sys.argv[1:], "rhgndcm:", ["legacy", "train", "midi", "reconfig", "help", "graph", "new", "delete", "record", "config="])
+        opts, _ = getopt(sys.argv[1:], "rhgndcm:", ["specs", "test", "legacy", "train", "midi", "reconfig", "help", "graph", "new", "delete", "record", "config="])
     except GetoptError as err:
         print(err)
         usage()
@@ -73,6 +77,10 @@ def main():
         elif opt in ("--legacy"):
             print("Using legacy data")
             LEGACY = True
+        elif opt in ("--test"):
+            TEST = True
+        elif opt in ("--specs"):
+            SPECS = True
         else:
             print("Unknown option" + opt) 
             usage()
@@ -168,8 +176,8 @@ def main():
         train_set, val_set = torch.utils.data.random_split(dataset, [train, val])
 
         # create data loaders to load the data in batches
-        train_loader = torch.utils.data.DataLoader(train_set, batch_size=1, shuffle=True)
-        val_loader = torch.utils.data.DataLoader(val_set, batch_size=1, shuffle=False)
+        train_loader = torch.utils.data.DataLoader(train_set, batch_size=2, shuffle=True)
+        val_loader = torch.utils.data.DataLoader(val_set, batch_size=2, shuffle=False)
 
         # create the model
         # put on gpu if possible
@@ -178,7 +186,25 @@ def main():
         model_to_train.to(device)
 
         # train model
-        model.training(model_to_train, train_loader, 200, device)
+        model.training(model_to_train, train_loader, 20, device)
+
+        # save the model
+        model.save_model(model_to_train, config["model_path"])
+
+    if TEST:
+        print("Testing the model saved at: " + config["model_path"] + " on the data in: " + config["data_home"])
+        model = Model()
+        model.load_state_dict(torch.load(config["model_path"] + "/model.pt"))
+        model.eval()
+
+        utils.record_for_test("./test_data")
+
+    if SPECS:
+        active_folder = utils.get_active_folder(config["data_home"])
+        metadata = utils.generate_meta_data(active_folder)
+        dataset = data.Data(metadata)
+        folder = config["data_home"] + "/spectrograms"
+        dataset.generate_melspectrograms(folder)
 
 if __name__ == "__main__":
     main()

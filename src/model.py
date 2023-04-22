@@ -1,5 +1,6 @@
 """ Here we define the model architecture and training loop """
 import torch
+import os
 from torch import nn
 from torch.nn import init
 
@@ -42,7 +43,7 @@ class Model(nn.Module):
 
         # Linear Classifier
         self.ap = nn.AdaptiveAvgPool2d(output_size=1)
-        self.lin = nn.Linear(in_features=64, out_features=5)
+        self.lin = nn.Linear(in_features=64, out_features=3)
 
         # Wrap the Convolutional Blocks
         self.conv = nn.Sequential(*conv_layers)
@@ -122,3 +123,9 @@ def training(model, train_dl, num_epochs, device):
 
     print('Finished Training')
       
+def save_model(model, model_path):
+    """ Save the model to the given path """
+    if not os.path.exists(model_path):
+        os.makedirs(model_path)
+    model_path = os.path.join(model_path, 'model.pt')
+    torch.save(model.state_dict(), model_path)

@@ -3,6 +3,7 @@ import torch
 import torchaudio
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 class Data(Dataset):
     def __init__(self, csv):
@@ -20,6 +21,14 @@ class Data(Dataset):
         top_db = 80
 
         spec_db = torchaudio.transforms.AmplitudeToDB(top_db=top_db)(spec)
-
         return spec_db, class_id
+
+    def generate_melspectrograms(self, folder):
+        for i in range(len(self)):
+            spec, class_id = self.__getitem__(i)
+            fig = plt.figure()
+            plt.imshow(spec[0,:,:].detach().numpy())
+            plt.show()
+            plt.close(fig)
+
 

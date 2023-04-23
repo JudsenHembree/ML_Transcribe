@@ -7,6 +7,7 @@ from glob import glob
 from shutil import rmtree
 import sys
 import os
+import time
 import array
 import shutil
 import json
@@ -594,20 +595,59 @@ def is_too_quiet(file, min_amplitude):
 
 def record(folder):
     """for every song record hum along with selected 10 seconds"""
+    # if prior recording exist nuke them
+    if os.path.exists(folder + "/recordings"):
+        shutil.rmtree(folder + "/recordings")
     pth = path(folder + "/seperated/*/selections/*.wav")
     globbed = glob(str(pth))
     if len(globbed) == 0:
         print("couldn't find selections.")
         return
+    piano_count = 0
+    drum_count = 0
+    vocal_count = 0
+    bass_count = 0
+    for file in globbed:
+        # make the recording folder if needed
+        outwav = file.replace("selections", "recordings")
+        head, base = os.path.split(outwav)
+        if not os.path.exists(head):
+            os.makedirs(head)
+        else:
+            # else nuke it
+            shutil.rmtree(head)
+            os.makedirs(head)
+        # if other or piano just skip
+        if base == "other.wav" or base == "piano.wav":
+            continue
+
     for file in globbed:
         # make the recording folder if needed
         outwav = file.replace("selections", "recordings")
         head, base = os.path.split(outwav)
         # if other just skip
-        if base == "other.wav":
+        if base == "other.wav" or base == "piano.wav":
             continue
-        if not os.path.exists(head):
-            os.makedirs(head)
+        if "piano" in file:
+            piano_count += 1
+            if piano_count > 10:
+                print("Skipping piano")
+                continue
+        elif "drums" in file:
+            drum_count += 1
+            if drum_count > 10:
+                print("Skipping drums")
+                continue
+        elif "vocals" in file:
+            vocal_count += 1
+            if vocal_count > 10:
+                print("Skipping vocals")
+                continue
+        elif "bass" in file:
+            bass_count += 1
+            if bass_count > 10:
+                print("Skipping bass")
+                continue
         wf = wave.open(file, 'rb')
         # if the audio is too quiet then skipping
         if is_too_quiet(file, 0.001):
@@ -634,18 +674,22 @@ def record(folder):
 
         p_record = pyaudio.PyAudio()
 
-        stream_record = p_record.open(format=sample_format,
-                        channels=2,
-                        rate=fs,
-                        frames_per_buffer=chunk,
-                        input=True)
-
+        print("completed " + str(bass_count) + " bass recordings")
+        print("completed " + str(vocal_count) + " vocal recordings")
+        print("completed " + str(drum_count) + " drum recordings")
         selection = "" 
         while selection != "2":
-            selection = input("Choose an option:\n\t1. Play without recording for practice\n\t2. Play with recording.\n")
+            selection = input("Choose an option:\n\t1. Play without recording for practice\n\t2. Play with recording.\n\t3. skip this recording.\n\tOption: ")
             if selection == "2":
                 print("Mimic the following audio focusing on the " + str(base.split(".")[0]) + " part.")
                 input("Press enter when ready")
+                stream_record = p_record.open(format=sample_format,
+                                channels=2,
+                                rate=fs,
+                                frames_per_buffer=chunk,
+                                input=True)
+                #sleep for a second to let the audio open
+                time.sleep(0.1)
                 #TODO glitchy not sure why
                 #TODO poppy in Docker idk why
                 record_data = array.array('h')
@@ -654,14 +698,20 @@ def record(folder):
                     stream.write(data)
                     # record
                     # need exception_on_overflow for docker (THERE IS SOME BUG HERE)
+
                     record_data = stream_record.read(chunk, exception_on_overflow = False)
                     record_frames.append(record_data)
+                stream_record.stop_stream()
+                stream_record.close()
             elif selection == "1":
                 print("Playing the following audio focusing on the " + str(base.split(".")[0]) + " part.")
                 input("Press enter when ready")
                 for _ in tqdm(range(0, int(wf.getframerate() / chunk * seconds)), colour='green'):
                     data = wf.readframes(chunk)
                     stream.write(data)
+            elif selection == "3":
+                print("Skipping this track")
+                break
             else:
                 print("Invalid option")
             wf.rewind()
@@ -673,10 +723,19 @@ def record(folder):
         stream.stop_stream()
         stream.close()
         p.terminate()
-        stream_record.stop_stream()
-        stream_record.close()
         p_record.terminate()
         outwf.close()
+
+        if selection == "3":
+            os.remove(outwav)
+            if "piano" in file:
+                piano_count -= 1
+            elif "drums" in file:
+                drum_count -= 1
+            elif "vocals" in file:
+                vocal_count -= 1
+            elif "bass" in file:
+                bass_count -= 1
 
 def convert_to_wav(file):
     """Converts a file to wav"""
@@ -741,7 +800,7 @@ def generate_meta_data(folder):
     csv_pth = path(folder + "/metadata.csv")
     csv = open(csv_pth, "w")
     csv.write("filename,class_id,stem\n")
-    stems = (("bass", 0), ("drums", 1), ("other", 2), ("vocals", 3), ("piano", 4))
+    stems = (("bass", 0), ("drums", 1), ("vocals", 2), ("piano", 3), ("other", 4), )
     for stem in stems:
         try:
             recordings = glob(str(path(folder + "/recordings/" + stem[0] + "/*.wav")))
@@ -798,4 +857,43 @@ def legacy(data_home):
     cull_data_home(data_home, remake=False)
     # copy legacy data to data
     shutil.copytree(legacy_data, data_home)
+
+def record_for_test(outwav):
+    """ record 10 seconds of audio for testing"""
+    if not os.path.exists(outwav):
+        os.makedirs(outwav)
+    p_record = pyaudio.PyAudio()
+    # for recording
+    record_frames = []
+    chunk = 1024
+    sample_format = pyaudio.paInt16
+    channels = 2
+    fs = 44100
+    seconds = 10
+
+    selection = input("Press enter to begin recording")
+    stream_record = p_record.open(format=sample_format,
+                    channels=2,
+                    rate=fs,
+                    frames_per_buffer=chunk,
+                    input=True)
+    #sleep for a second to let the audio open
+    time.sleep(0.1)
+    #TODO glitchy not sure why
+    #TODO poppy in Docker idk why
+    record_data = array.array('h')
+    for _ in tqdm(range(0, int(44100 / chunk * seconds)), colour='green'):
+        # record
+        # need exception_on_overflow for docker (THERE IS SOME BUG HERE)
+        record_data = stream_record.read(chunk, exception_on_overflow = False)
+        record_frames.append(record_data)
+    stream_record.stop_stream()
+    stream_record.close()
+
+    outwf = wave.open(os.path.join(outwav, "recording.wav"), 'wb')
+    outwf.setnchannels(channels)
+    outwf.setsampwidth(p_record.get_sample_size(sample_format))
+    outwf.setframerate(fs)
+    outwf.writeframes(b''.join(record_frames))
+    outwf.close()
 

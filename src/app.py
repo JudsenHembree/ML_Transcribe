@@ -24,11 +24,19 @@ def usage():
     print("Options:")
     print("\t-h --help: Show this help message and exit")
     print("\t-c --config: specify a config file, not advised")
+    print("\t-r --reconfig: reconfigure the program config.json")
+    print("\t-n --new: create a new session folder. (pull songs from spotify)")
+    print("\t-d --delete: delete all data in data_home folder")
+    print("\t--record: record audio samples for the current session")
+    print("\t--train: train the model")
+    print("\t--legacy: use pre-split audio files")
+    print("\t--specs: generate spectrograms for the current session")
+    print("\t--midi: convert wav to midi")
+    print("\n")
 
 def main():
     """Main function of the program"""
 
-    GRAPH = False
     RECORD = False
     NEW = False
     CULL = False
@@ -42,7 +50,7 @@ def main():
 
     """Parse command line arguments"""
     try:
-        opts, _ = getopt(sys.argv[1:], "rhgndcm:", ["specs", "test", "legacy", "train", "midi", "reconfig", "help", "graph", "new", "delete", "record", "config="])
+        opts, _ = getopt(sys.argv[1:], "rhgndcm:", ["specs", "test", "legacy", "train", "midi", "reconfig", "help", "new", "delete", "record", "config="])
     except GetoptError as err:
         print(err)
         usage()
@@ -57,9 +65,6 @@ def main():
         elif opt in ("-c", "--config"):
             print("alt Config file not currently supported")
             sys.exit(2)
-        elif opt in ("-g", "--graph"):
-            print("Generating graphs.")
-            GRAPH = True
         elif opt in ("-n", "--new"):
             print("Creating a new session folder.")
             NEW = True
@@ -115,7 +120,7 @@ def main():
         # get downlaoded and move them to session folder
         songs_downloaded = glob("*.mp3")
         for song in songs_downloaded:
-            shutil.move(song, session_folder + "/" + song)
+            shutil.move(song, str(path(str(session_folder) + "/" + song)))
 
         songs_downloaded = glob(str(songs_downloaded_path))
         # separate the music into its different parts
@@ -158,15 +163,14 @@ def main():
         if active_folder is None:
             print("No active folder found")
             sys.exit(2)
-        utils.record(active_folder)
+        utils.record(active_folder, number_of_recordings=15)
 
     if TRAIN:
         active_folder = utils.get_active_folder(config["data_home"])
         utils.collect_recordings_place_in_folder(active_folder)
         metadata = utils.generate_meta_data(active_folder)
         # generate the melspectrograms for each wav file recording
-        if GRAPH:
-            utils.generate_CNN_inputs(active_folder)
+        utils.generate_CNN_inputs(active_folder)
 
         # init the dataset
         dataset = data.Data(metadata)
@@ -195,17 +199,18 @@ def main():
     if MIDI:
         active_folder = utils.get_active_folder(config["data_home"])
         utils.collect_recordings_place_in_folder(active_folder)
-        active_folder = active_folder + "/recordings"
-        recordings = glob(active_folder + "/*/*.wav")
+        active_folder = path(str(active_folder) + "/recordings")
+        recordings = glob(str(path(str(active_folder) + "/*/*.wav")))
         for recording in recordings:
             utils.clean_wav_file(recording, replace = True)
-            utils.wav_to_midi(recording, utils.get_active_folder(config["data_home"]))
+            utils.wav_to_midi(recording, str(utils.get_active_folder(config["data_home"])))
 
         #gather midi for cleaning
-        midi = glob(utils.get_active_folder(config["data_home"]) + "/midi/*/*.mid")
+        midi = glob(str(path(str(utils.get_active_folder(config["data_home"])) + "/midi/*/*.mid")))
         for mid in midi:
             utils.clean_midi(mid, piano_roll = True)
 
+    """ Deprecated
     if TEST:
         print("Testing the model saved at: " + config["model_path"] + " on the data in: " + config["data_home"])
         model = Model()
@@ -220,6 +225,7 @@ def main():
         dataset = data.Data(metadata)
         folder = config["data_home"] + "/spectrograms"
         dataset.generate_melspectrograms(folder)
+    """
 
 if __name__ == "__main__":
     main()

@@ -263,18 +263,18 @@ def wav_to_midi(wav_file, dest = ""):
     if dest == "":
         midi_file = os.path.join(os.path.dirname(wav_file), os.path.basename(wav_file) + "_conv_midi.mid")
     else:
-        if not os.path.isdir(dest + "/midi"):
-            os.makedirs(dest + "/midi/piano")
-            os.makedirs(dest + "/midi/vocals")
-            os.makedirs(dest + "/midi/drums")
-            os.makedirs(dest + "/midi/bass")
-            os.makedirs(dest + "/midi/other")
-        elif not os.path.isdir(dest + "/midi/piano") or not os.path.isdir(dest + "/midi/vocals") or not os.path.isdir(dest + "/midi/drums") or not os.path.isdir(dest + "/midi/bass") or not os.path.isdir(dest + "/midi/other"):
-            os.makedirs(dest + "/midi/piano")
-            os.makedirs(dest + "/midi/vocals")
-            os.makedirs(dest + "/midi/drums")
-            os.makedirs(dest + "/midi/bass")
-            os.makedirs(dest + "/midi/other")
+        if not os.path.isdir(str(path(str(dest) + "/midi"))):
+            os.makedirs(str(path(str(dest + "/midi/piano"))))
+            os.makedirs(str(path(str(dest + "/midi/vocals"))))
+            os.makedirs(str(path(str(dest + "/midi/drums"))))
+            os.makedirs(str(path(str(dest + "/midi/bass"))))
+            os.makedirs(str(path(str(dest + "/midi/other"))))
+        elif not os.path.isdir(str(path(str(dest) + "/midi/piano"))) or not os.path.isdir(str(path(str(dest) + "/midi/vocals"))) or not os.path.isdir(str(path(str(dest) + "/midi/drums"))) or not os.path.isdir(str(path(str(dest) + "/midi/bass"))) or not os.path.isdir(str(path(str(dest) + "/midi/other"))):
+            os.makedirs(str(path(str(dest + "/midi/piano"))))
+            os.makedirs(str(path(str(dest + "/midi/vocals"))))
+            os.makedirs(str(path(str(dest + "/midi/drums"))))
+            os.makedirs(str(path(str(dest + "/midi/bass"))))
+            os.makedirs(str(path(str(dest + "/midi/other"))))
         instrument = "bass"
         if "piano" in wav_file:
             instrument = "piano"
@@ -642,7 +642,7 @@ def is_too_quiet(file, min_amplitude):
         return True
     return False
 
-def record(folder):
+def record(folder, number_of_recordings=10):
     """for every song record hum along with selected 10 seconds"""
     # if prior recording exist nuke them
     if os.path.exists(folder + "/recordings"):
@@ -679,22 +679,22 @@ def record(folder):
             continue
         if "piano" in file:
             piano_count += 1
-            if piano_count > 10:
+            if piano_count > number_of_recordings:
                 print("Skipping piano")
                 continue
         elif "drums" in file:
             drum_count += 1
-            if drum_count > 10:
+            if drum_count > number_of_recordings:
                 print("Skipping drums")
                 continue
         elif "vocals" in file:
             vocal_count += 1
-            if vocal_count > 10:
+            if vocal_count > number_of_recordings:
                 print("Skipping vocals")
                 continue
         elif "bass" in file:
             bass_count += 1
-            if bass_count > 10:
+            if bass_count > number_of_recordings:
                 print("Skipping bass")
                 continue
         wf = wave.open(file, 'rb')

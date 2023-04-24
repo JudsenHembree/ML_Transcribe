@@ -1,5 +1,4 @@
 # ML_Transcribe
-commit
 ## Current state of project
 1. pull audio from a spotify link
 2. for said audio seperate it into 5 stem model
@@ -8,50 +7,43 @@ commit
 5. Play the selected audio and record audio as the user hums/sings/something along
 6. Take selected audio and generate mel spectrograms.
 7. Feed those into a cnn for image classification (aka sound classification)
+8. Use spotifies Basic_Pitch module to generate midi based off of the recording. 
 ### TODO
 1. Note Transcription (JUD) (COMPLETED, BUT NAIVE)
 2. Many parameter runs (programatic) (JONAH)
     - Graph results 
-3. Re-test on a large Dataset (JUD) (TOMORROW)
-4. Windows tests (JUD/JONAH) (TOMORROW)
+3. Re-test on a large Dataset (JUD) :check:
+4. Windows tests (JUD/JONAH) :check:
 5. Python modularize (JONAH)
     - IF NOT DO SOME KIND OF SETUP.SH TO MAKE IT EASY FOR GRADER TO RUN.
-6. Docker (JUD) (COMPLETED, but can only record on linux distros)
+6. Docker (JUD) (:check:, but can only record on linux distros)
 ## Setup
-I'm assuming you run python3
-You need to install
-- spleeter
+### Local (on your own machine)
+- I'm assuming you run python3
+- If you'd like to run locally the module requirements are located at "docker/requirements.txt"
+- Everything was tested on Ubuntu
+
 ```
-pip install spleeter
-```
-- spotdl
-```
-pip install spotdl
-```
-- pyaudio
-```
-sudo apt-get install python3-pyaudio
-```
-```
-sudo apt install portaudio19-dev
-```
-- pytorch
-``` 
-pip install torch
+pip install -r docker/requirements.txt
 ```
 
-The code uses a symlink to this repo.
-In terminal go to one level above the repo and link it
-On linux in bash
-```
-sn -s $(pwd)/ML_Transcribe /ML_Transcribe
-```
-Or you can just manually do the full path without the pwd thing.
-
-### Running on windows
+#### Running on windows
 On windows symlinks are a pain. 
 I have the code try to find your full path and set up the config based off of that. 
 *Should* work out of the box. 
+
+### Docker
+- I've set up a docker container if you'd like to use that
+- There is a makefile for you. Simply 
+``` 
+make run
+```
+then
+```
+python3 src/app.py --help
+```
+#### Problems
+1. Using Mics/speakers in docker is weird. (It sort of works on Ubuntu, but I wouldn't record any audio here myself.)
 
 ## repo structure
 For each folder
@@ -69,21 +61,7 @@ For each folder
     - python app
     - utils module
 
-## How to run
-There is a makefile if you want
-- clear out the data folder
-```
-make clean
-```
-- do a run (WILL CALL CLEAN AS WELL)
-```
-make run
-```
-
-You can obviously not use the makefile
-```
-python src/app.py --help
-```
+## Demo gifs
 ![demo](./gifs/demo.gif)
 
 ## Disclamers

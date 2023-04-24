@@ -12,11 +12,11 @@
 1. Note Transcription (JUD) (COMPLETED, BUT NAIVE)
 2. Many parameter runs (programatic) (JONAH)
     - Graph results 
-3. Re-test on a large Dataset (JUD) :check:
-4. Windows tests (JUD/JONAH) :check:
+3. Re-test on a large Dataset (JUD) :heavy_check_mark:
+4. Windows tests (JUD/JONAH) :heavy_check_mark:
 5. Python modularize (JONAH)
     - IF NOT DO SOME KIND OF SETUP.SH TO MAKE IT EASY FOR GRADER TO RUN.
-6. Docker (JUD) (:check:, but can only record on linux distros)
+6. Docker (JUD) (:heavy_check_mark:, but can only record on linux distros)
 ## Setup
 ### Local (on your own machine)
 - I'm assuming you run python3

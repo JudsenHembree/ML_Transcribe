@@ -5,6 +5,7 @@ and the spleeter library to separate the music into its different parts
 """
 import sys
 import shutil
+from matplotlib import re
 import torch
 from pathlib import Path as path
 import subprocess
@@ -190,6 +191,20 @@ def main():
 
         # save the model
         model.save_model(model_to_train, config["model_path"])
+
+    if MIDI:
+        active_folder = utils.get_active_folder(config["data_home"])
+        utils.collect_recordings_place_in_folder(active_folder)
+        active_folder = active_folder + "/recordings"
+        recordings = glob(active_folder + "/*/*.wav")
+        for recording in recordings:
+            utils.clean_wav_file(recording, replace = True)
+            utils.wav_to_midi(recording, utils.get_active_folder(config["data_home"]))
+
+        #gather midi for cleaning
+        midi = glob(utils.get_active_folder(config["data_home"]) + "/midi/*/*.mid")
+        for mid in midi:
+            utils.clean_midi(mid, piano_roll = True)
 
     if TEST:
         print("Testing the model saved at: " + config["model_path"] + " on the data in: " + config["data_home"])

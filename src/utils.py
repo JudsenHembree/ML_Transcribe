@@ -14,9 +14,12 @@ import json
 import wave
 import pyaudio
 from tqdm import tqdm
+import pretty_midi
+from pretty_midi import PrettyMIDI
 from matplotlib import pyplot as plt
 import numpy as np
 import librosa
+import music21
 import librosa.display
 import soundfile as sf
 from basic_pitch.inference import predict
@@ -167,9 +170,6 @@ def graph_all_wav(folder, MIDI=False):
         print("Graphing %s", file)
         if file.endswith(".wav"):
             graph_wav(os.path.join(folder, file))
-            # MIDI is experimental and kinda trash
-            if MIDI:
-                wav_to_midi(os.path.join(folder, file))
 
 def graph_wav(file):
     """
@@ -251,7 +251,7 @@ def make_data_home(data_home):
         os.makedirs(data_home)
 
 # kinda trash not really pursing this atm
-def wav_to_midi(wav_file):
+def wav_to_midi(wav_file, dest = ""):
     """Converts a wav file to a midi file"""
     print("Converting %s to midi", wav_file)
     try:
@@ -260,8 +260,54 @@ def wav_to_midi(wav_file):
         print("Error: %s", str(err))
         return
     print("Writing midi file")
-    midi_file = os.path.join(os.path.dirname(wav_file), os.path.basename(wav_file) + "_conv_midi.mid")
+    if dest == "":
+        midi_file = os.path.join(os.path.dirname(wav_file), os.path.basename(wav_file) + "_conv_midi.mid")
+    else:
+        if not os.path.isdir(dest + "/midi"):
+            os.makedirs(dest + "/midi/piano")
+            os.makedirs(dest + "/midi/vocals")
+            os.makedirs(dest + "/midi/drums")
+            os.makedirs(dest + "/midi/bass")
+            os.makedirs(dest + "/midi/other")
+        elif not os.path.isdir(dest + "/midi/piano") or not os.path.isdir(dest + "/midi/vocals") or not os.path.isdir(dest + "/midi/drums") or not os.path.isdir(dest + "/midi/bass") or not os.path.isdir(dest + "/midi/other"):
+            os.makedirs(dest + "/midi/piano")
+            os.makedirs(dest + "/midi/vocals")
+            os.makedirs(dest + "/midi/drums")
+            os.makedirs(dest + "/midi/bass")
+            os.makedirs(dest + "/midi/other")
+        instrument = "bass"
+        if "piano" in wav_file:
+            instrument = "piano"
+        elif "vocals" in wav_file:
+            instrument = "vocals"
+        elif "drums" in wav_file:
+            instrument = "drums"
+        elif "other" in wav_file:
+            instrument = "other"
+        midi_file = os.path.join(dest + "/midi/" + instrument + "/" + os.path.basename(wav_file) + "_conv_midi.mid")
     midi_data.write(midi_file)
+
+def clean_midi(midi_file, piano_roll = False):
+    """Cleans a midi file, and creates an image output"""
+    print("Cleaning %s", midi_file)
+    try:
+        midi = PrettyMIDI(midi_file)
+    except FileNotFoundError:
+        print("Error: %s not found", midi_file)
+        return
+    for instrument in midi.instruments:
+        print(instrument)
+    if piano_roll:
+        fig = plt.figure(figsize=(12, 4))
+        plot_piano_roll(midi, 24, 84)
+        plt.savefig(midi_file + "_piano_roll.png")
+        plt.close(fig)
+
+def plot_piano_roll(pm, start_pitch, end_pitch, fs=100):
+    # Use librosa's specshow function for displaying the piano roll
+    librosa.display.specshow(pm.get_piano_roll(fs)[start_pitch:end_pitch],
+                             hop_length=1, sr=fs, x_axis='time', y_axis='cqt_note',
+                             fmin=pretty_midi.note_number_to_hz(start_pitch))
 
 def clean_wav(seperated_folder):
     """Cleans the wav files in a folder"""
@@ -269,26 +315,29 @@ def clean_wav(seperated_folder):
         if file.endswith(".wav"):
             clean_wav_file(os.path.join(seperated_folder, file))
 
-def clean_wav_file(wav_file):
-    """Cleans a wav file"""
+def clean_wav_file(wav_file, replace = False):
+    """Cleans a wav file and removes low amplitude"""
     print("Cleaning %s", wav_file)
     try:
         wav = wave.open(wav_file, 'r')
     except FileNotFoundError:
         print("Error: %s not found", wav_file)
         return
-    frames = wav.readframes(-1)
+    framerate = wav.getframerate()
+    frames = wav.readframes(framerate*10)
     sound_info = np.fromstring(frames, 'int16')
-    frame_rate = wav.getframerate()
+    sound_info, left, lf, right, rf = filter_sound_info(sound_info)
     wav.close()
-    print("Writing cleaned wav file")
-    wav_file = os.path.join(os.path.dirname(wav_file), os.path.basename(wav_file) + "_clean.wav")
-    wav = wave.open(wav_file, 'w')
-    wav.setnchannels(1)
-    wav.setsampwidth(2)
-    wav.setframerate(frame_rate)
-    wav.writeframes(sound_info)
-    wav.close()
+    if replace:
+        wav = wave.open(wav_file, 'w')
+        wav.setparams((2, 2, framerate, 10, 'NONE', 'not compressed'))
+        wav.writeframes(sound_info)
+        wav.close()
+    else:
+        wav = wave.open(wav_file + "_cleaned.wav", 'w')
+        wav.setparams((2, 2, framerate, 10, 'NONE', 'not compressed'))
+        wav.writeframes(sound_info)
+        wav.close()
 
 # def custom_data_transform(folder):
 #     """Transforms the custom data in a folder"""
@@ -353,7 +402,7 @@ def filter_out_low_amplitude(lf, rf):
 
 def filter_out_high_amplitude(lf, rf):
     """Filters out high amplitude"""
-    high= 9000 # Remove high frequencies.
+    high= 20000 # Remove high frequencies.
     lf[high:], rf[high:] = 0,0 # low pass filter (3)
     return lf, rf
 

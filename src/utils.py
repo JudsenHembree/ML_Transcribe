@@ -33,9 +33,9 @@ def reconfigure():
     print("Current data home is %s", str(config["data_home"]))
     config["data_home"] = str(path(pwd + "/data"))
     print("New data home is %s", str(config["data_home"]))
-    print("Current model directory is %s", str(config["MODEL_DIRECTORY"]))
-    config["MODEL_DIRECTORY"] = str(path(pwd + "/models"))
-    print("New model directory is %s", str(config["MODEL_DIRECTORY"]))
+    print("Current model directory is %s", str(config["model_path"]))
+    config["model_path"] = str(path(pwd + "/models"))
+    print("New model directory is %s", str(config["model_path"]))
 
     with open(file, 'w') as conf:
         print(config)

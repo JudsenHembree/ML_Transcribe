@@ -1,4 +1,28 @@
 # ML_Transcribe
+## FOR THE GRADER/HOW TO REPRODUCE
+First please clone this repo so you have access to things like the makefile. 
+I would not try to record audio if I were you it's laborious and liable to fail if not running ubuntu. 
+### Recommended Docker
+- I have a docker image for the project I would reccomend using that to recreate results since it will give 
+you an exact copy of my project where I know that it works.
+- docker pull feastertas/ml_transcribe
+- make run should launch the image. (DISCLAIMER: I USE UBUNTU YOU MAY NEED TO REMOVE THE '--device /dev/snd' PART IT MAY WORK DIFFERENTLY ON OTHER OPERATING SYSTEMS)
+- once inside the interactive image
+    1. python3 src/app.py --help            <--- for help
+    2. python3 src/app.py --train            <--- for training a single model
+    3. python3 src/app.py --train_variable_layers            <--- for training a models with a variety of layer setups
+
+### Run local with dataset from git LFS
+If you don't want to use docker (which I would reccomend once again) the github has lfs setup as well.
+1. get lfs if you don't have it. [LFS](https://git-lfs.com/)
+2. Once you have downloaded git lfs run (git lfs install) <-- sets up account
+3. get the dataset and pull it by (git lfs fetch --all)
+
+You *should* now have all the dataset you can then use the following to run.
+1. python3 src/app.py --help            <--- for help
+2. python3 src/app.py --train            <--- for training a single model
+3. python3 src/app.py --train_variable_layers            <--- for training a models with a variety of layer setups
+
 ## Current state of project
 1. pull audio from a spotify link
 2. for said audio seperate it into 5 stem model

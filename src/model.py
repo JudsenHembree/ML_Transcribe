@@ -43,13 +43,17 @@ class Model(nn.Module):
         return x
 
 
-def training(model, train_dl, num_epochs, device):
+def training(model, train_dl, num_epochs, device, log = False, log_dest = 'log.csv'):
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(),lr=0.001)
     scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.001,
                                                 steps_per_epoch=int(len(train_dl)),
                                                 epochs=num_epochs,
                                                 anneal_strategy='linear')
+    f = None
+    if log:
+        f = open(log_dest, 'w')
+        f.write('Epoch, Loss, Accuracy\n')
     for epoch in range(num_epochs):
         running_loss = 0.0
         correct_prediction = 0
@@ -80,7 +84,12 @@ def training(model, train_dl, num_epochs, device):
         avg_loss = running_loss / num_batches
         acc = correct_prediction/total_prediction
         print(f'Epoch: {epoch}, Loss: {avg_loss:.2f}, Accuracy: {acc:.2f}')
+        if log:
+            if f is not None:
+                f.write(f'{epoch}, {avg_loss}, {acc}\n')
 
+    if f is not None:
+        f.close()
     print('Finished Training')
       
 def save_model(model, model_path):

@@ -3,9 +3,12 @@
 This app is a music downloader that uses the spotdl library to download music from spotify
 and the spleeter library to separate the music into its different parts
 """
+from math import log
 import sys
+import os
+import pandas as pd
 import shutil
-from matplotlib import re
+from matplotlib import pyplot as plt
 import torch
 from pathlib import Path as path
 import subprocess
@@ -28,7 +31,7 @@ def usage():
     print("\t-n --new: create a new session folder. (pull songs from spotify)")
     print("\t-d --delete: delete all data in data_home folder")
     print("\t--record: record audio samples for the current session")
-    print("\t--train: train the model")
+    print("\t--train_variable_layers: train the model")
     print("\t--legacy: use pre-split audio files")
     print("\t--specs: generate spectrograms for the current session")
     print("\t--midi: convert wav to midi")
@@ -43,6 +46,7 @@ def main():
     RECONF = False
     MIDI = False
     TRAIN = False
+    VARIABLE_LAYERS = False
     LEGACY = False
     TEST = False
     SPECS = False
@@ -50,7 +54,7 @@ def main():
 
     """Parse command line arguments"""
     try:
-        opts, _ = getopt(sys.argv[1:], "rhgndcm:", ["specs", "test", "legacy", "train", "midi", "reconfig", "help", "new", "delete", "record", "config="])
+        opts, _ = getopt(sys.argv[1:], "rhgndcm:", ["specs", "test", "legacy", "train", "train_variable_layers", "midi", "reconfig", "help", "new", "delete", "record", "config="])
     except GetoptError as err:
         print(err)
         usage()
@@ -80,6 +84,10 @@ def main():
         elif opt in ("--train"):
             print("Training")
             TRAIN = True
+        elif opt in ("--train_variable_layers"):
+            print("Training with many alternative layers")
+            TRAIN = True
+            VARIABLE_LAYERS = True
         elif opt in ("--legacy"):
             print("Using legacy data")
             LEGACY = True
@@ -186,15 +194,46 @@ def main():
 
         # create the model
         # put on gpu if possible
-        model_to_train = model.Model()
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        model_to_train.to(device)
+        if VARIABLE_LAYERS:
+            for i in range(4, 10, 1):
+                model_to_train = model.Model(number_of_layers=i)
+                device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+                model_to_train.to(device)
 
-        # train model
-        model.training(model_to_train, train_loader, 20, device)
+                # train model
+                active_folder = utils.get_active_folder(config["data_home"])
+                log_dest = path(str(active_folder) + "/logs")
+                if not os.path.exists(log_dest):
+                    os.makedirs(log_dest)
+                log_file = path(str(log_dest) + "/log_" + str(i) + ".txt")
+                print("Logging to " + str(log_file))
+                model.training(model_to_train, train_loader, 20, device, log=True, log_dest=str(log_file))
 
-        # save the model
-        model.save_model(model_to_train, config["model_path"])
+            fig = plt.figure(figsize=(10, 10))
+            plt.title("Accuracy for variable layers", fontsize=16)
+            plt.xlabel("epochs", fontsize=14)
+            plt.ylabel("accuracy", fontsize=14)
+            plt.ylim(.2, 1)
+            plt.xlim(0, 20)
+            globbed = glob(str(path(str(active_folder) + "/logs/*.txt")))
+            for file in globbed:
+                df = pd.read_csv(file, skipinitialspace=True)
+                x = df["Epoch"]
+                y = df["Accuracy"]
+                plt.plot(x, y, label=str(str(file).split("/")[-1]).split(".")[0])
+            plt.legend(loc="lower right", ncol=2, fontsize=12)
+            plt.tight_layout()
+            plt.savefig(str(path(str(active_folder) + "/logs/accuracy.png")))
+        else:
+            model_to_train = model.Model()
+            device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+            model_to_train.to(device)
+
+            # train model
+            model.training(model_to_train, train_loader, 20, device)
+
+            # save the model
+            model.save_model(model_to_train, config["model_path"])
 
     if MIDI:
         active_folder = utils.get_active_folder(config["data_home"])
